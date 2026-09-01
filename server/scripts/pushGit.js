@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import git from 'isomorphic-git';
-import http from 'isomorphic-git/http/node/index.js';
+import http from 'isomorphic-git/http/node';
 
 const rootDir = path.resolve('.');
 
@@ -49,7 +49,8 @@ if (process.argv[2]) {
   pushToRemote(url, tok)
     .then(() => console.log('✓ Push completed successfully!'))
     .catch((err) => {
-      console.error('Push failed:', err.message);
+      console.error('Push error:', err.message);
+      if (err.data) console.error('Details:', err.data);
       process.exit(1);
     });
 }

@@ -11,7 +11,7 @@ This project is architected for deployment as a single full-stack **Render Web S
 ### 1. Render Service Settings
 - **Service Type**: Web Service
 - **Environment**: Node
-- **Build Command**: `npm install && npm run build`
+- **Build Command**: `npm install --include=dev && npm rebuild sqlite3 --build-from-source && npm run build`
 - **Start Command**: `npm start`
 - **Health Check Path**: `/api/health`
 
@@ -19,6 +19,7 @@ This project is architected for deployment as a single full-stack **Render Web S
 | Variable | Recommended Value | Description |
 | :--- | :--- | :--- |
 | `NODE_ENV` | `production` | Enables production mode and static React serving |
+| `NODE_VERSION` | `20.18.3` | Pinned Node.js 20 LTS runtime |
 | `PORT` | `10000` *(or default)* | Render assigns this automatically |
 | `HOST` | `0.0.0.0` | Binds server to all network interfaces |
 | `DATA_DIR` | `/var/data` *(with Persistent Disk)* | Mount path for SQLite DB and upload storage |

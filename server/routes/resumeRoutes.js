@@ -1,26 +1,31 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { dbGet, dbRun } from '../config/db.js';
 import { verifyAdmin } from '../middleware/auth.js';
 import { uploadResume } from '../middleware/upload.js';
-import { RESUME_DIR } from '../config/paths.js';
+import { uploadFileBlob, deleteFileBlob } from '../config/storage.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
 // Helper to get active resume metadata
 const getResumeMetadata = async () => {
-  const row = await dbGet('SELECT value, updatedAt FROM site_settings WHERE key = "resume_data"');
+  const row = await dbGet('SELECT value, updatedAt FROM site_settings WHERE key = ?', ['resume_data']);
   if (!row || !row.value) return null;
   try {
     const data = JSON.parse(row.value);
-    if (data.filePath && fs.existsSync(data.filePath)) {
-      return {
-        ...data,
-        updatedAt: row.updatedAt
-      };
-    }
-    return null;
+    const resolvedUrl = data.url || data.publicUrl || (data.filename ? `/uploads/resume/${data.filename}` : null);
+    if (!resolvedUrl) return null;
+    return {
+      ...data,
+      url: resolvedUrl,
+      downloadUrl: data.downloadUrl || resolvedUrl,
+      updatedAt: row.updatedAt
+    };
   } catch (e) {
     return null;
   }
@@ -30,7 +35,7 @@ const getResumeMetadata = async () => {
 router.get('/status', async (req, res) => {
   try {
     const metadata = await getResumeMetadata();
-    if (!metadata) {
+    if (!metadata || !metadata.url) {
       return res.json({
         success: true,
         available: false,
@@ -58,14 +63,23 @@ router.get('/status', async (req, res) => {
 router.get('/view', async (req, res) => {
   try {
     const metadata = await getResumeMetadata();
-    if (!metadata || !fs.existsSync(metadata.filePath)) {
+    if (!metadata || !metadata.url) {
       return res.status(404).send('Resume file is currently unavailable or has not been uploaded yet.');
     }
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(metadata.originalName || 'Nishanth_Bhashamoni_Resume.pdf')}"`);
-    const fileStream = fs.createReadStream(metadata.filePath);
-    fileStream.pipe(res);
+    if (metadata.url.startsWith('http')) {
+      return res.redirect(metadata.url);
+    }
+
+    // Local file fallback
+    const localPath = metadata.filePath || path.join(__dirname, '..', 'data', 'uploads', 'resume', metadata.filename);
+    if (fs.existsSync(localPath)) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(metadata.originalName || 'Nishanth_Bhashamoni_Resume.pdf')}"`);
+      return fs.createReadStream(localPath).pipe(res);
+    }
+
+    return res.redirect(metadata.url);
   } catch (error) {
     console.error('Error viewing resume:', error);
     res.status(500).send('Error viewing resume file.');
@@ -76,15 +90,24 @@ router.get('/view', async (req, res) => {
 router.get('/download', async (req, res) => {
   try {
     const metadata = await getResumeMetadata();
-    if (!metadata || !fs.existsSync(metadata.filePath)) {
+    if (!metadata || !metadata.url) {
       return res.status(404).send('Resume file is currently unavailable or has not been uploaded yet.');
     }
 
-    const downloadFilename = metadata.originalName || 'Nishanth_Bhashamoni_Resume.pdf';
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadFilename)}"`);
-    const fileStream = fs.createReadStream(metadata.filePath);
-    fileStream.pipe(res);
+    if (metadata.url.startsWith('http')) {
+      return res.redirect(metadata.downloadUrl || metadata.url);
+    }
+
+    // Local file fallback
+    const localPath = metadata.filePath || path.join(__dirname, '..', 'data', 'uploads', 'resume', metadata.filename);
+    if (fs.existsSync(localPath)) {
+      const downloadFilename = metadata.originalName || 'Nishanth_Bhashamoni_Resume.pdf';
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadFilename)}"`);
+      return fs.createReadStream(localPath).pipe(res);
+    }
+
+    return res.redirect(metadata.url);
   } catch (error) {
     console.error('Error downloading resume:', error);
     res.status(500).send('Error downloading resume file.');
@@ -109,22 +132,26 @@ router.post('/', verifyAdmin, (req, res) => {
     }
 
     try {
-      // 1. Delete previous resume file if one exists
+      // 1. Delete previous resume blob/file if exists
       const existing = await getResumeMetadata();
-      if (existing && existing.filePath && fs.existsSync(existing.filePath)) {
-        try {
-          fs.unlinkSync(existing.filePath);
-        } catch (unlinkErr) {
-          console.warn('Could not remove previous resume file:', unlinkErr.message);
-        }
+      if (existing && existing.url) {
+        await deleteFileBlob(existing.url);
       }
 
-      // 2. Store new metadata in site_settings
+      // 2. Upload to Vercel Blob / Storage
+      const uploadResult = await uploadFileBlob({
+        folder: 'resume',
+        filename: req.file.originalname,
+        buffer: req.file.buffer,
+        contentType: req.file.mimetype || 'application/pdf'
+      });
+
       const newMetadata = {
-        filename: req.file.filename,
+        filename: req.file.originalname,
         originalName: req.file.originalname,
-        filePath: path.resolve(req.file.path),
-        publicUrl: `/uploads/resume/${req.file.filename}`,
+        url: uploadResult.url,
+        downloadUrl: uploadResult.downloadUrl,
+        filePath: uploadResult.pathname,
         size: req.file.size,
         mimetype: req.file.mimetype,
         uploadedAt: new Date().toISOString()
@@ -166,15 +193,11 @@ router.post('/', verifyAdmin, (req, res) => {
 router.delete('/', verifyAdmin, async (req, res) => {
   try {
     const existing = await getResumeMetadata();
-    if (existing && existing.filePath && fs.existsSync(existing.filePath)) {
-      try {
-        fs.unlinkSync(existing.filePath);
-      } catch (unlinkErr) {
-        console.warn('Could not delete resume file from disk:', unlinkErr.message);
-      }
+    if (existing && existing.url) {
+      await deleteFileBlob(existing.url);
     }
 
-    await dbRun('DELETE FROM site_settings WHERE key = "resume_data"');
+    await dbRun('DELETE FROM site_settings WHERE key = ?', ['resume_data']);
 
     res.json({
       success: true,

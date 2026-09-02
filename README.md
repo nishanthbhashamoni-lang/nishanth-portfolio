@@ -1,41 +1,37 @@
 # Nishanth Bhashamoni — Personal Portfolio + Dynamic Admin System
 
-A high-performance personal portfolio with a **secure dynamic Admin Management System** built with **React**, **Vite**, **Tailwind CSS**, **Node.js**, **Express**, **SQLite**, **bcrypt**, **JWT**, and **Multer**.
+A high-performance personal portfolio with a **secure dynamic Admin Management System** built with **React**, **Vite**, **Tailwind CSS**, **Node.js**, **Express**, **Turso (Serverless SQLite)**, **Vercel Blob Storage**, **bcrypt**, **JWT**, and **Multer**.
 
 ---
 
-## 🚀 Render Web Service Deployment Guide
+## 🚀 Vercel Free Tier ($0/mo) Deployment Guide
 
-This project is architected for deployment as a single full-stack **Render Web Service** with an optional **Persistent Disk** for database and uploaded file persistence.
+This project is architected to run **100% free** on Vercel serverless infrastructure with **Turso Serverless SQLite** and **Vercel Blob Storage**.
 
-### 1. Render Service Settings
-- **Service Type**: Web Service
-- **Environment**: Node
-- **Build Command**: `npm install --include=dev && npm rebuild sqlite3 --build-from-source && npm run build`
-- **Start Command**: `npm start`
-- **Health Check Path**: `/api/health`
+### Step 1: Create Free Turso Database (30 seconds)
+1. Go to **[turso.tech](https://turso.tech)** and sign in with GitHub ($0 Free Tier: 9 GB storage).
+2. Create a new database named `nishanth-portfolio`.
+3. Copy your:
+   - **Database URL**: `libsql://nishanth-portfolio-<username>.turso.io`
+   - **Auth Token**: Click "Create Token" and copy the token.
 
-### 2. Environment Variables in Render Dashboard
-| Variable | Recommended Value | Description |
-| :--- | :--- | :--- |
-| `NODE_ENV` | `production` | Enables production mode and static React serving |
-| `NODE_VERSION` | `20.18.3` | Pinned Node.js 20 LTS runtime |
-| `PORT` | `10000` *(or default)* | Render assigns this automatically |
-| `HOST` | `0.0.0.0` | Binds server to all network interfaces |
-| `DATA_DIR` | `/var/data` *(with Persistent Disk)* | Mount path for SQLite DB and upload storage |
-| `JWT_SECRET` | *(Random 32+ char string)* | Cryptographic key for signing admin tokens |
-| `ADMIN_USERNAME` | `admin` | Initial admin username on fresh database creation |
-| `ADMIN_EMAIL` | `your-email@example.com` | Initial admin recovery email |
-| `ADMIN_PASSWORD` | *(Strong custom password)* | Initial admin setup password |
+### Step 2: Deploy on Vercel
+1. Import your GitHub repository (`nishanth-portfolio`) into **[Vercel](https://vercel.com)**.
+2. Framework Preset: **Vite** (detected automatically).
+3. Under **Environment Variables**, add:
+   - `TURSO_DATABASE_URL` -> `libsql://nishanth-portfolio-<username>.turso.io`
+   - `TURSO_AUTH_TOKEN` -> `<your_turso_auth_token>`
+   - `JWT_SECRET` -> `<random_32_character_string>`
+   - `ADMIN_USERNAME` -> `admin`
+   - `ADMIN_EMAIL` -> `your-email@example.com`
+   - `ADMIN_PASSWORD` -> `<your_strong_admin_password>`
+4. Click **Deploy**.
 
-### 3. Persistent Storage on Render (Disks)
-To ensure your SQLite database, uploaded resumes, and project images persist across deploys:
-1. In your Render Web Service dashboard, navigate to **Disks** -> **Add Disk**.
-2. Set **Mount Path**: `/var/data`
-3. Set **Size**: 1 GB (or as needed)
-4. Ensure the environment variable `DATA_DIR` is set to `/var/data`.
-
-The application will automatically create `/var/data/portfolio.db`, `/var/data/uploads/`, `/var/data/uploads/resume/`, and `/var/data/uploads/files/`.
+### Step 3: Enable Vercel Blob Storage (1-Click)
+1. In your Vercel project dashboard, go to the **Storage** tab.
+2. Click **Create Database** -> **Blob** -> **Continue**.
+3. Name the store `portfolio-blobs` and click **Create**.
+4. Vercel will automatically connect `BLOB_READ_WRITE_TOKEN` to your project!
 
 ---
 
@@ -46,10 +42,11 @@ The application will automatically create `/var/data/portfolio.db`, `/var/data/u
 npm install
 ```
 
-### 2. Configure Environment
+### 2. Configure Local Environment
 ```bash
 cp .env.example .env
 ```
+*(Local development runs on a local SQLite file by default with zero cloud dependencies needed).*
 
 ### 3. Start Development Server
 ```bash
@@ -64,7 +61,8 @@ npm run dev
 
 ## ✨ Features & Architecture
 
-- **Dynamic Resume Management**: Upload, view (`/api/resume/view`), and download (`/api/resume/download`) PDFs with one-click admin replacement.
+- **Dynamic Resume Management**: Upload, view (`/api/resume/view`), and download (`/api/resume/download`) PDFs with one-click admin replacement via Vercel Blob CDN.
 - **Dynamic Categories**: Relational many-to-many categories (`project_categories`) with instant client-side filtering.
 - **Multi-Discipline Work**: Support for software projects, technical writing, dashboards, and research attachments.
+- **Zero Native C++ Dependencies**: 100% pure JavaScript/WebAssembly client (`@libsql/client`), eliminating all GLIBC/native binary compilation issues permanently.
 - **Production Hardened**: bcrypt salted hashing, rate limiting, secure cookies, helmet security headers, and zero client-exposed secrets.

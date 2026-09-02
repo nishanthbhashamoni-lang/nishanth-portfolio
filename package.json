@@ -1,10 +1,10 @@
 {
   "name": "nishanth-portfolio",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "module",
   "engines": {
-    "node": ">=20.0.0 <21.0.0"
+    "node": ">=18.0.0"
   },
   "scripts": {
     "dev": "concurrently -k -n \"API,VITE\" -c \"cyan,magenta\" \"node server/index.js\" \"vite\"",
@@ -12,12 +12,12 @@
     "server": "node server/index.js",
     "init:db": "node server/scripts/initDb.js",
     "build": "vite build",
-    "build:render": "npm rebuild sqlite3 --build-from-source && npm run build",
-    "rebuild:sqlite": "npm rebuild sqlite3 --build-from-source",
     "preview": "vite preview",
     "start": "node server/index.js"
   },
   "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "@vercel/blob": "^0.27.1",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "concurrently": "^9.1.2",
@@ -33,7 +33,6 @@
     "multer": "^1.4.5-lts.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "sqlite3": "^6.0.1",
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {

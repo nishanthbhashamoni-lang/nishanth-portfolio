@@ -1,8 +1,11 @@
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import db, { dbGet, dbRun, dbAll } from '../config/db.js';
+import db, { dbGet, dbRun, dbAll, initTables } from '../config/db.js';
 
 export async function initDatabase() {
+  // 0. Ensure schema tables exist
+  await initTables();
+
   // 1. Ensure Admin User exists
   const existingAdmin = await dbGet('SELECT * FROM admin_users LIMIT 1');
   if (!existingAdmin) {
@@ -20,7 +23,6 @@ export async function initDatabase() {
     );
 
     console.log('✓ Initial Admin User created in database.');
-    console.log('  Security notice: Update your password via the admin portal before production deployment.');
   }
 
   // 2. Ensure initial categories exist
@@ -165,6 +167,7 @@ export async function initDatabase() {
 // Run directly if invoked as script
 if (process.argv[1]?.endsWith('initDb.js')) {
   initDatabase().then(() => {
+    console.log('✓ Database initialization finished.');
     process.exit(0);
   }).catch((err) => {
     console.error('Database initialization error:', err);

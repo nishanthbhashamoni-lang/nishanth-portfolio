@@ -1,19 +1,48 @@
-import sqlite3 from 'sqlite3';
-import { DATA_DIR, DB_PATH, UPLOADS_DIR, RESUME_DIR, FILES_DIR } from './paths.js';
+import { createClient } from '@libsql/client';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 
-const verboseSqlite = sqlite3.verbose();
-const db = new verboseSqlite.Database(DB_PATH, (err) => {
-  if (err) {
-    console.error('Error connecting to SQLite database at:', DB_PATH, err.message);
-  } else {
-    console.log('Connected to SQLite database at:', DB_PATH);
-  }
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const dataDir = path.join(__dirname, '..', 'data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+const localDbPath = path.join(dataDir, 'portfolio.db').replace(/\\/g, '/');
+
+export const dbClient = createClient({
+  url: process.env.TURSO_DATABASE_URL || `file:${localDbPath}`,
+  authToken: process.env.TURSO_AUTH_TOKEN || undefined
 });
 
-// Initialize database tables
-db.serialize(() => {
-  // 1. Categories Table
-  db.run(`
+// Helper for single row query
+export const dbGet = async (sql, params = []) => {
+  const result = await dbClient.execute({ sql, args: params });
+  if (!result.rows || result.rows.length === 0) return null;
+  return result.rows[0];
+};
+
+// Helper for multiple rows query
+export const dbAll = async (sql, params = []) => {
+  const result = await dbClient.execute({ sql, args: params });
+  return result.rows || [];
+};
+
+// Helper for write/mutation query
+export const dbRun = async (sql, params = []) => {
+  const result = await dbClient.execute({ sql, args: params });
+  return {
+    lastID: result.lastInsertRowid != null ? String(result.lastInsertRowid) : null,
+    changes: result.rowsAffected || 0
+  };
+};
+
+// Initialize schema tables
+export const initTables = async () => {
+  await dbClient.execute(`
     CREATE TABLE IF NOT EXISTS categories (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -28,8 +57,7 @@ db.serialize(() => {
     )
   `);
 
-  // 2. Projects / Work Items Table
-  db.run(`
+  await dbClient.execute(`
     CREATE TABLE IF NOT EXISTS projects (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
@@ -55,8 +83,7 @@ db.serialize(() => {
     )
   `);
 
-  // 3. Project Categories Many-to-Many Relationship Table
-  db.run(`
+  await dbClient.execute(`
     CREATE TABLE IF NOT EXISTS project_categories (
       project_id TEXT NOT NULL,
       category_id TEXT NOT NULL,
@@ -67,8 +94,7 @@ db.serialize(() => {
     )
   `);
 
-  // 4. Admin Users Table
-  db.run(`
+  await dbClient.execute(`
     CREATE TABLE IF NOT EXISTS admin_users (
       id TEXT PRIMARY KEY,
       username TEXT UNIQUE NOT NULL,
@@ -81,45 +107,13 @@ db.serialize(() => {
     )
   `);
 
-  // Column migration for mustChangePassword if table existed earlier
-  db.run('ALTER TABLE admin_users ADD COLUMN mustChangePassword INTEGER DEFAULT 1', () => {});
-
-  // 5. Site Settings / Resume Metadata Table
-  db.run(`
+  await dbClient.execute(`
     CREATE TABLE IF NOT EXISTS site_settings (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
-});
-
-// Promisified helper methods
-export const dbGet = (sql, params = []) => {
-  return new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
-    });
-  });
 };
 
-export const dbAll = (sql, params = []) => {
-  return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-};
-
-export const dbRun = (sql, params = []) => {
-  return new Promise((resolve, reject) => {
-    db.run(sql, params, function (err) {
-      if (err) reject(err);
-      else resolve({ lastID: this.lastID, changes: this.changes });
-    });
-  });
-};
-
-export default db;
+export default dbClient;

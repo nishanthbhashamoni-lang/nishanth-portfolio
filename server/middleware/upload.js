@@ -1,28 +1,8 @@
 import multer from 'multer';
-import path from 'path';
-import { UPLOADS_DIR, RESUME_DIR, FILES_DIR } from '../config/paths.js';
 
-// 1. Storage for Images & General Project Attachments
-const generalStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    if (file.mimetype === 'application/pdf') {
-      cb(null, FILES_DIR);
-    } else {
-      cb(null, UPLOADS_DIR);
-    }
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname).toLowerCase();
-    const sanitizedBase = path.basename(file.originalname, ext)
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '-')
-      .slice(0, 30);
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
-    cb(null, `file-${sanitizedBase}-${uniqueSuffix}${ext}`);
-  }
-});
+// Use memory storage so file buffers can be uploaded to Vercel Blob or saved locally
+const storage = multer.memoryStorage();
 
-// File filter for general uploads (images + PDFs)
 const generalFilter = (req, file, cb) => {
   const allowedTypes = [
     'image/jpeg',
@@ -33,7 +13,7 @@ const generalFilter = (req, file, cb) => {
     'application/pdf'
   ];
 
-  if (allowedTypes.includes(file.mimetype)) {
+  if (allowedTypes.includes(file.mimetype) || file.originalname.toLowerCase().endsWith('.pdf')) {
     cb(null, true);
   } else {
     cb(new Error('Invalid file type. Only JPG, PNG, WEBP, SVG, and PDF files are allowed.'), false);
@@ -41,21 +21,10 @@ const generalFilter = (req, file, cb) => {
 };
 
 export const upload = multer({
-  storage: generalStorage,
+  storage,
   fileFilter: generalFilter,
   limits: {
     fileSize: 10 * 1024 * 1024 // 10MB limit
-  }
-});
-
-// 2. Storage for Resume PDF
-const resumeStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, RESUME_DIR);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = `${Date.now()}`;
-    cb(null, `nishanth-resume-${uniqueSuffix}.pdf`);
   }
 });
 
@@ -68,7 +37,7 @@ const resumeFilter = (req, file, cb) => {
 };
 
 export const uploadResume = multer({
-  storage: resumeStorage,
+  storage,
   fileFilter: resumeFilter,
   limits: {
     fileSize: 10 * 1024 * 1024 // 10MB limit

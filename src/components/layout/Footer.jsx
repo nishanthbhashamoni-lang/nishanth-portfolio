@@ -1,8 +1,8 @@
 import React from 'react';
 import { portfolioData } from '../../data/portfolioData';
-import { Github, Linkedin, Mail, ArrowUp, Shield } from 'lucide-react';
+import { Github, Linkedin, Mail, ArrowUp } from 'lucide-react';
 
-export default function Footer({ onAdminClick }) {
+export default function Footer() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -64,20 +64,10 @@ export default function Footer({ onAdminClick }) {
         </div>
       </div>
 
-      {/* Copyright & Admin Link */}
+      {/* Copyright */}
       <div className="max-w-6xl mx-auto mt-8 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
         <p>© 2026 {portfolioData.personal.name}. All rights reserved.</p>
-
-        {onAdminClick && (
-          <button
-            onClick={onAdminClick}
-            className="inline-flex items-center gap-1 text-[11px] font-mono text-slate-600 hover:text-slate-400 transition-colors"
-            title="Admin Portal Login"
-          >
-            <Shield className="w-3 h-3" />
-            <span>Admin Portal</span>
-          </button>
-        )}
+        <p className="text-[11px] font-mono text-slate-600">Built with React, Vite & Tailwind CSS</p>
       </div>
     </footer>
   );

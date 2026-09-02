@@ -4,6 +4,7 @@ import { ArrowRight, Download, Github, Linkedin, Mail } from 'lucide-react';
 
 export default function Hero({ onShowToast }) {
   const { personal } = portfolioData;
+  const resumeUrl = personal.resumeUrl || '/resume.pdf';
 
   const scrollToProjects = (e) => {
     e.preventDefault();
@@ -55,9 +56,10 @@ export default function Hero({ onShowToast }) {
           </a>
 
           <a
-            href="/api/resume/download"
+            href={resumeUrl}
             target="_blank"
             rel="noopener noreferrer"
+            download="Nishanth_Bhashamoni_Resume.pdf"
             className="inline-flex items-center gap-2.5 px-6 py-3 text-sm font-semibold text-slate-200 rounded-full glass-card hover:text-white hover:border-cyan-400/40 transition-all duration-200 transform hover:-translate-y-0.5"
           >
             <Download className="w-4 h-4 text-cyan-400" />

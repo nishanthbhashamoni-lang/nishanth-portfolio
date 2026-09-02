@@ -1,62 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import SectionHeading from '../ui/SectionHeading';
 import ProjectIllustration from '../ui/ProjectIllustration';
 import { 
   Github, 
   ExternalLink, 
   Clock, 
-  FileText, 
-  Download, 
   Layers, 
-  Feather, 
-  BarChart3, 
-  Sparkles, 
-  Paperclip,
-  CheckCircle2
+  Paperclip
 } from 'lucide-react';
-import { api } from '../../api/client';
 import { portfolioData } from '../../data/portfolioData';
 
 export default function Projects() {
-  const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [projectsList, setProjectsList] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Fetch categories and projects on load
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadData = async () => {
-      try {
-        const [catRes, projRes] = await Promise.all([
-          api.getCategories(),
-          api.getProjects()
-        ]);
-
-        if (isMounted) {
-          if (catRes.success && Array.isArray(catRes.data)) {
-            setCategories(catRes.data);
-          }
-          if (projRes.success && Array.isArray(projRes.data)) {
-            setProjectsList(projRes.data);
-          } else {
-            setProjectsList(portfolioData.projects || []);
-          }
-        }
-      } catch (err) {
-        console.warn('Using offline portfolio projects fallback:', err.message);
-        if (isMounted) {
-          setProjectsList(portfolioData.projects || []);
-        }
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    loadData();
-    return () => { isMounted = false; };
-  }, []);
+  const categories = portfolioData.categories || [];
+  const projectsList = portfolioData.projects || [];
 
   // Filter projects by selected category
   const filteredProjects = projectsList.filter((p) => {
@@ -114,7 +71,7 @@ export default function Projects() {
       <SectionHeading 
         badge="Portfolio & Work"
         title="Featured Work & Engineering"
-        subtitle="Practical projects, data analytics models, research publications, and technical writing."
+        subtitle="Practical projects, data analytics models, interactive dashboards, and technical problem solving."
       />
 
       {/* Dynamic Category Tabs */}
@@ -197,17 +154,9 @@ export default function Projects() {
                   <div className="flex items-center justify-between gap-2 mb-2.5">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {getWorkTypeBadge(project.workType)}
-                      {Array.isArray(project.categories) && project.categories.length > 0 ? (
-                        project.categories.slice(0, 2).map((c) => (
-                          <span key={c.id || c} className="text-[10px] font-mono text-slate-300 px-2 py-0.5 rounded bg-white/5 border border-white/10">
-                            {c.name || c}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-[10px] font-mono text-slate-300 px-2 py-0.5 rounded bg-white/5 border border-white/10">
-                          {project.category || 'Work'}
-                        </span>
-                      )}
+                      <span className="text-[10px] font-mono text-slate-300 px-2 py-0.5 rounded bg-white/5 border border-white/10">
+                        {project.category || 'Work'}
+                      </span>
                     </div>
                     {getStatusBadge(project.status)}
                   </div>

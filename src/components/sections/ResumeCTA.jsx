@@ -4,6 +4,7 @@ import { FileText, Download } from 'lucide-react';
 
 export default function ResumeCTA({ onShowToast }) {
   const { personal } = portfolioData;
+  const resumeUrl = personal.resumeUrl || '/resume.pdf';
 
   return (
     <section className="py-16 md:py-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto relative">
@@ -27,9 +28,10 @@ export default function ResumeCTA({ onShowToast }) {
 
           <div className="pt-2">
             <a
-              href="/api/resume/download"
+              href={resumeUrl}
               target="_blank"
               rel="noopener noreferrer"
+              download="Nishanth_Bhashamoni_Resume.pdf"
               className="inline-flex items-center gap-2.5 px-7 py-3.5 text-sm font-semibold text-slate-950 bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-400 hover:from-cyan-300 hover:to-blue-300 rounded-full shadow-lg shadow-cyan-500/20 transition-all duration-200 transform hover:-translate-y-0.5"
             >
               <Download className="w-4 h-4" />

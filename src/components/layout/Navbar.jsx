@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { portfolioData } from '../../data/portfolioData';
 import { Menu, X, FileText, ArrowUpRight } from 'lucide-react';
-import { api } from '../../api/client';
 
 export default function Navbar({ onShowToast }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
-  const [resumeAvailable, setResumeAvailable] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,21 +35,6 @@ export default function Navbar({ onShowToast }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Check resume status
-  useEffect(() => {
-    const checkResume = async () => {
-      try {
-        const res = await api.getResumeStatus();
-        if (res.success) {
-          setResumeAvailable(Boolean(res.available));
-        }
-      } catch (err) {
-        // Leave available fallback
-      }
-    };
-    checkResume();
-  }, []);
-
   const handleNavClick = (e, href) => {
     e.preventDefault();
     setMobileMenuOpen(false);
@@ -62,14 +45,7 @@ export default function Navbar({ onShowToast }) {
     }
   };
 
-  const handleResumeClick = (e) => {
-    if (!resumeAvailable) {
-      e.preventDefault();
-      if (onShowToast) {
-        onShowToast('Resume is currently being updated. Please check back shortly or connect directly!', 'info');
-      }
-    }
-  };
+  const resumeUrl = portfolioData.personal.resumeUrl || '/resume.pdf';
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -111,13 +87,12 @@ export default function Navbar({ onShowToast }) {
           })}
         </nav>
 
-        {/* Dynamic Resume Button */}
+        {/* Resume Button */}
         <div className="hidden md:flex items-center gap-3">
           <a
-            href="/api/resume/view"
+            href={resumeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={handleResumeClick}
             className="group relative inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white rounded-full bg-slate-900 border border-white/15 hover:border-cyan-400/50 hover:bg-slate-800 transition-all duration-200 shadow-sm"
           >
             <FileText className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
@@ -159,13 +134,11 @@ export default function Navbar({ onShowToast }) {
             })}
             <div className="pt-2 border-t border-white/10 mt-2">
               <a
-                href="/api/resume/download"
+                href={resumeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(e) => {
-                  setMobileMenuOpen(false);
-                  handleResumeClick(e);
-                }}
+                download="Nishanth_Bhashamoni_Resume.pdf"
+                onClick={() => setMobileMenuOpen(false)}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white rounded-lg bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 hover:bg-cyan-500/30 transition-colors"
               >
                 <FileText className="w-4 h-4 text-cyan-400" />

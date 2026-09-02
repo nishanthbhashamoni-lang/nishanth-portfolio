@@ -1,12 +1,3 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
 # Dependencies
 node_modules/
 
@@ -17,25 +8,14 @@ dist-ssr/
 # Environment and Secret Files
 .env
 .env.*
-!.env.example
 *.local
 
-# Database & Runtime Storage
-server/data/*
-!server/data/.gitkeep
-data/
-*.db
-*.db-journal
-*.sqlite
-*.sqlite3
-
-# Uploaded Files & Resumes (Persistent dynamic user content)
-server/uploads/*
-!server/uploads/.gitkeep
-server/uploads/resume/*
-!server/uploads/resume/.gitkeep
-server/uploads/files/*
-!server/uploads/files/.gitkeep
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Editor directories and files
 .vscode/*

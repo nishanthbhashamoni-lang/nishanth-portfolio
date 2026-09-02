@@ -1,4 +1,4 @@
-﻿export const portfolioData = {
+export const portfolioData = {
   personal: {
     name: "Nishanth Bhashamoni",
     brandName: "Nishanth.",
@@ -6,11 +6,10 @@
     statusBadge: "Open to Internship Opportunities",
     tagline: "I build data-driven applications, AI-powered solutions, and practical software projects while continuously exploring new technologies.",
     location: "India",
-    // Update your contact and profile links here:
-    email: "nishanth.bhashamoni@example.com", // Replace with your real email address
-    github: "https://github.com",            // Replace with your GitHub profile URL
-    linkedin: "https://linkedin.com",        // Replace with your LinkedIn profile URL
-    resumeUrl: "/resume.pdf",                // Place your resume as 'resume.pdf' in the public/ folder
+    email: "nishanth.bhashamoni@example.com",
+    github: "https://github.com",
+    linkedin: "https://linkedin.com",
+    resumeUrl: "/resume.pdf",
   },
 
   about: {
@@ -86,25 +85,33 @@
     ]
   },
 
-  /**
-   * PROJECTS CONFIGURATION
-   * ------------------------------------------------------------
-   * To add a new project in the future, simply copy this template and add it to the array below:
-   * 
-   * {
-   *   id: "unique-project-slug",
-   *   title: "Project Title",
-   *   tagline: "Short one-line subtitle",
-   *   description: "Concise summary of what the project does and its impact.",
-   *   technologies: ["Python", "Pandas", "SQL"],
-   *   category: "Data Science",         // Display badge (e.g. "Data Analytics", "AI / ML", "Web App")
-   *   status: "Completed",              // "Completed" | "In Progress" | "Coming Soon"
-   *   image: "",                        // (Optional) Path to image in public/ e.g. "/projects/my-app.png"
-   *   github: "https://github.com/...", // (Optional) GitHub repository link
-   *   demo: "https://...",              // (Optional) Live demo link
-   *   iconType: "code",                 // (Optional fallback) "trending-up" | "gauge" | "database" | "code"
-   * }
-   */
+  categories: [
+    {
+      id: "data-analytics",
+      name: "Data Analytics",
+      slug: "data-analytics",
+      description: "Exploratory data analysis, statistical modeling, forecasting, and data pipelines."
+    },
+    {
+      id: "data-visualization",
+      name: "Data Visualization & BI",
+      slug: "data-visualization",
+      description: "Interactive Tableau dashboards, business intelligence, and telemetry insights."
+    },
+    {
+      id: "ai-ml",
+      name: "AI & Machine Learning",
+      slug: "ai-ml",
+      description: "Predictive algorithms, LLM workflows, foundation models, and AI solutions."
+    },
+    {
+      id: "content-writing",
+      name: "Content Writing",
+      slug: "content-writing",
+      description: "Technical articles, research storytelling, educational scripts, and blog creation."
+    }
+  ],
+
   projects: [
     {
       id: "retail-demand-forecasting",
@@ -112,12 +119,16 @@
       tagline: "Hackathon Analytics & Auto-Reorder Engine",
       description: "Retail analytics application that helps businesses forecast product demand and make better inventory and auto-reorder decisions. Built during TakeOver'26 Hackathon.",
       longDescription: "Developed during an intensive 24-hour sprint to solve supply chain inefficiencies. Built analytical demand forecast models paired with an automated inventory threshold trigger system.",
+      workType: "Project",
       technologies: ["Python", "Data Analytics", "Forecasting", "Flask"],
-      category: "Hackathon Project",
+      category: "Data Analytics",
+      categories: ["data-analytics", "ai-ml"],
       status: "Completed",
       image: "",
       github: "https://github.com",
       demo: "",
+      externalUrl: "",
+      fileUrl: "",
       featured: true,
       accentColor: "from-emerald-500/20 to-teal-500/10",
       iconType: "trending-up"
@@ -128,12 +139,16 @@
       tagline: "Industrial IoT Downtime Analytics",
       description: "Interactive Tableau dashboard analyzing factory downtime and device-level telemetry data to identify operational patterns and potential improvement areas.",
       longDescription: "Aggregated device sensor logs and factory telemetry metrics to construct interactive BI views, helping plant operators diagnose downtime causes and optimize machine reliability.",
+      workType: "Dashboard",
       technologies: ["Tableau", "Data Visualization", "Data Analysis"],
-      category: "BI & Data Visualization",
+      category: "Data Visualization & BI",
+      categories: ["data-visualization", "data-analytics"],
       status: "Completed",
       image: "",
       github: "https://github.com",
       demo: "",
+      externalUrl: "",
+      fileUrl: "",
       featured: true,
       accentColor: "from-blue-500/20 to-cyan-500/10",
       iconType: "gauge"

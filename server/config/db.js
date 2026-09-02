@@ -1,33 +1,12 @@
 import sqlite3 from 'sqlite3';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
+import { DATA_DIR, DB_PATH, UPLOADS_DIR, RESUME_DIR, FILES_DIR } from './paths.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const dataDir = path.join(__dirname, '..', 'data');
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
-const uploadsDir = path.join(__dirname, '..', 'uploads');
-const resumeDir = path.join(uploadsDir, 'resume');
-const filesDir = path.join(uploadsDir, 'files');
-
-[uploadsDir, resumeDir, filesDir].forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-});
-
-const dbPath = path.join(dataDir, 'portfolio.db');
 const verboseSqlite = sqlite3.verbose();
-const db = new verboseSqlite.Database(dbPath, (err) => {
+const db = new verboseSqlite.Database(DB_PATH, (err) => {
   if (err) {
-    console.error('Error connecting to SQLite database:', err.message);
+    console.error('Error connecting to SQLite database at:', DB_PATH, err.message);
   } else {
-    console.log('Connected to SQLite database at:', dbPath);
+    console.log('Connected to SQLite database at:', DB_PATH);
   }
 });
 

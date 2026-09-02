@@ -1,15 +1,10 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
 import { dbGet, dbRun } from '../config/db.js';
 import { verifyAdmin } from '../middleware/auth.js';
 import { uploadResume } from '../middleware/upload.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const uploadsDir = path.join(__dirname, '..', 'uploads');
-const resumeDir = path.join(uploadsDir, 'resume');
+import { RESUME_DIR } from '../config/paths.js';
 
 const router = express.Router();
 

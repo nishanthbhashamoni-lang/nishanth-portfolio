@@ -1,28 +1,14 @@
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const uploadsDir = path.join(__dirname, '..', 'uploads');
-const resumeDir = path.join(uploadsDir, 'resume');
-const filesDir = path.join(uploadsDir, 'files');
-
-[uploadsDir, resumeDir, filesDir].forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-});
+import { UPLOADS_DIR, RESUME_DIR, FILES_DIR } from '../config/paths.js';
 
 // 1. Storage for Images & General Project Attachments
 const generalStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     if (file.mimetype === 'application/pdf') {
-      cb(null, filesDir);
+      cb(null, FILES_DIR);
     } else {
-      cb(null, uploadsDir);
+      cb(null, UPLOADS_DIR);
     }
   },
   filename: function (req, file, cb) {
@@ -65,7 +51,7 @@ export const upload = multer({
 // 2. Storage for Resume PDF
 const resumeStorage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, resumeDir);
+    cb(null, RESUME_DIR);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = `${Date.now()}`;

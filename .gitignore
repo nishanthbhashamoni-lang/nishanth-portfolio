@@ -10,7 +10,7 @@ lerna-debug.log*
 # Dependencies
 node_modules/
 
-# Production Build
+# Production Build Output
 dist/
 dist-ssr/
 
@@ -20,12 +20,12 @@ dist-ssr/
 !.env.example
 *.local
 
-# Database & SQLite Storage
-server/data/*.db
-server/data/*.db-journal
-server/data/*.sqlite
-server/data/*.sqlite3
+# Database & Runtime Storage
+server/data/*
+!server/data/.gitkeep
+data/
 *.db
+*.db-journal
 *.sqlite
 *.sqlite3
 

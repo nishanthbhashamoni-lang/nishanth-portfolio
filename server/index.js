@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 
@@ -13,6 +14,7 @@ import categoryRoutes from './routes/categoryRoutes.js';
 import resumeRoutes from './routes/resumeRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import { initDatabase } from './scripts/initDb.js';
+import { UPLOADS_DIR, DATA_DIR } from './config/paths.js';
 
 dotenv.config();
 
@@ -20,7 +22,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = parseInt(process.env.PORT, 10) || 5000;
+const HOST = process.env.HOST || '0.0.0.0';
+const isProduction = process.env.NODE_ENV === 'production';
+const distPath = path.join(__dirname, '..', 'dist');
 
 // Security Middleware
 app.use(
@@ -30,12 +35,25 @@ app.use(
   })
 );
 
-app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5173'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// CORS Configuration
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+  : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5173'];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. same-origin, curl, mobile apps)
+      if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Permissive for same-origin production deployment
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  })
+);
 
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
@@ -50,12 +68,11 @@ const authLimiter = rateLimit({
     message: 'Too many login attempts from this IP. Please try again after 15 minutes.'
   },
   standardHeaders: true,
-  legacyHeaders: false,
+  legacyHeaders: false
 });
 
-// Serve uploaded static files
-const uploadsPath = path.join(__dirname, 'uploads');
-app.use('/uploads', express.static(uploadsPath));
+// Serve uploaded static files from persistent UPLOADS_DIR
+app.use('/uploads', express.static(UPLOADS_DIR));
 
 // API Routes
 app.use('/api/auth/login', authLimiter);
@@ -70,9 +87,27 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    service: 'Nishanth Portfolio API & Dynamic Content Service'
+    service: 'Nishanth Portfolio API & Dynamic Content Service',
+    environment: process.env.NODE_ENV || 'development',
+    storage: {
+      dataDir: DATA_DIR,
+      uploadsDir: UPLOADS_DIR
+    }
   });
 });
+
+// Serve React Frontend (in Production or when dist folder exists)
+if (isProduction || fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+
+  // Client-side single page app fallback for React Router (/admin, etc.)
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+      return next();
+    }
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
 // 404 handler for unknown API routes
 app.use((req, res) => {
@@ -97,12 +132,13 @@ app.use((err, req, res, next) => {
 // Initialize database and start listening
 initDatabase()
   .then(() => {
-    app.listen(PORT, () => {
+    app.listen(PORT, HOST, () => {
       console.log(`====================================================`);
-      console.log(`🚀 Portfolio API Server running on port ${PORT}`);
-      console.log(`🔗 API Base:     http://localhost:${PORT}/api`);
-      console.log(`📄 Resume API:   http://localhost:${PORT}/api/resume/status`);
-      console.log(`📁 Uploads Dir:  http://localhost:${PORT}/uploads`);
+      console.log(`🚀 Portfolio Web Service running on http://${HOST}:${PORT}`);
+      console.log(`🌍 Environment:  ${process.env.NODE_ENV || 'development'}`);
+      console.log(`📂 Data Dir:     ${DATA_DIR}`);
+      console.log(`📁 Uploads Dir:  ${UPLOADS_DIR}`);
+      console.log(`🏥 Health Check: http://${HOST}:${PORT}/api/health`);
       console.log(`====================================================`);
     });
   })

@@ -1,13 +1,9 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
 import { upload } from '../middleware/upload.js';
 import { verifyAdmin } from '../middleware/auth.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const uploadsDir = path.join(__dirname, '..', 'uploads');
+import { UPLOADS_DIR, FILES_DIR } from '../config/paths.js';
 
 const router = express.Router();
 
@@ -57,8 +53,8 @@ router.delete('/', verifyAdmin, (req, res) => {
     }
 
     const sanitizedFilename = path.basename(targetFile);
-    const regularPath = path.join(uploadsDir, sanitizedFilename);
-    const filesPath = path.join(uploadsDir, 'files', sanitizedFilename);
+    const regularPath = path.join(UPLOADS_DIR, sanitizedFilename);
+    const filesPath = path.join(FILES_DIR, sanitizedFilename);
 
     let deleted = false;
     if (fs.existsSync(regularPath)) {

@@ -1,64 +1,69 @@
 # Nishanth Bhashamoni — Personal Portfolio + Dynamic Admin System
 
-A modern, high-performance personal portfolio with a **secure Admin Management System** built with **React**, **Vite**, **Tailwind CSS**, **Node.js**, **Express**, **SQLite**, **bcrypt**, **JWT**, and **Multer**.
+A high-performance personal portfolio with a **secure dynamic Admin Management System** built with **React**, **Vite**, **Tailwind CSS**, **Node.js**, **Express**, **SQLite**, **bcrypt**, **JWT**, and **Multer**.
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Render Web Service Deployment Guide
 
-### 1. Configure Environment Variables
-Copy `.env.example` to `.env` and set your secure environment variables:
+This project is architected for deployment as a single full-stack **Render Web Service** with an optional **Persistent Disk** for database and uploaded file persistence.
+
+### 1. Render Service Settings
+- **Service Type**: Web Service
+- **Environment**: Node
+- **Build Command**: `npm install && npm run build`
+- **Start Command**: `npm start`
+- **Health Check Path**: `/api/health`
+
+### 2. Environment Variables in Render Dashboard
+| Variable | Recommended Value | Description |
+| :--- | :--- | :--- |
+| `NODE_ENV` | `production` | Enables production mode and static React serving |
+| `PORT` | `10000` *(or default)* | Render assigns this automatically |
+| `HOST` | `0.0.0.0` | Binds server to all network interfaces |
+| `DATA_DIR` | `/var/data` *(with Persistent Disk)* | Mount path for SQLite DB and upload storage |
+| `JWT_SECRET` | *(Random 32+ char string)* | Cryptographic key for signing admin tokens |
+| `ADMIN_USERNAME` | `admin` | Initial admin username on fresh database creation |
+| `ADMIN_EMAIL` | `your-email@example.com` | Initial admin recovery email |
+| `ADMIN_PASSWORD` | *(Strong custom password)* | Initial admin setup password |
+
+### 3. Persistent Storage on Render (Disks)
+To ensure your SQLite database, uploaded resumes, and project images persist across deploys:
+1. In your Render Web Service dashboard, navigate to **Disks** -> **Add Disk**.
+2. Set **Mount Path**: `/var/data`
+3. Set **Size**: 1 GB (or as needed)
+4. Ensure the environment variable `DATA_DIR` is set to `/var/data`.
+
+The application will automatically create `/var/data/portfolio.db`, `/var/data/uploads/`, `/var/data/uploads/resume/`, and `/var/data/uploads/files/`.
+
+---
+
+## 💻 Local Development
+
+### 1. Install Dependencies
+```bash
+npm install
+```
+
+### 2. Configure Environment
 ```bash
 cp .env.example .env
 ```
 
-Ensure `JWT_SECRET` is set to a cryptographically strong random string in production.
-
-### 2. Start Backend API & Frontend Client Concurrently
+### 3. Start Development Server
 ```bash
 npm run dev
 ```
 - **Public Portfolio**: [http://localhost:3000](http://localhost:3000)
-- **Admin Portal**: [http://localhost:3000/admin](http://localhost:3000/admin)
+- **Admin Management**: [http://localhost:3000/admin](http://localhost:3000/admin)
 - **Backend API**: [http://localhost:5000/api](http://localhost:5000/api)
-
----
-
-## 🔐 Admin Portal & Security Management
-
-To access the protected management dashboard:
-1. Navigate to `/admin` in your browser (or click **"Admin Portal"** in the footer).
-2. Sign in with your configured admin credentials.
-3. If using initial setup credentials, update your password immediately using the **"Password"** modal before deploying to production.
+- **Health Check**: [http://localhost:5000/api/health](http://localhost:5000/api/health)
 
 ---
 
 ## ✨ Features & Architecture
 
-### 1. Dynamic Resume Management (`/admin` -> Resume)
-- **Upload & Replace**: Upload your official resume PDF directly through the admin dashboard with persistent storage in `server/uploads/resume/`.
-- **Delete & Preview**: View uploaded date, file size, download, or delete the resume.
-- **Public Buttons**:
-  - Top "Resume" button serves PDF inline (`/api/resume/view`) to view directly in the browser.
-  - "Download Resume" buttons trigger attachment download (`/api/resume/download`).
-  - If no resume is active, public buttons display a clean, non-disruptive notification toast without breaking.
-
-### 2. Dynamic Categories System (`/admin` -> Categories)
-- Create, edit, and delete custom categories (e.g. `Data Analytics`, `Data Visualization`, `AI / ML`, `Content Writing`).
-- Many-to-many database relationship (`project_categories`) links work items across multiple categories.
-- Real-time work item count tracking per category.
-- Dynamic public category tabs filter work samples with smooth transitions.
-
-### 3. Multi-Discipline Work & Publications (`/admin` -> Projects & Work)
-- Add/Edit software projects, articles, scripts, research papers, case studies, or dashboards.
-- Assign work items to one or multiple categories.
-- Upload project screenshots/mockups or attach sample document PDFs.
-- Dedicated support for external publication links (e.g. Medium/blog), GitHub repositories, and live demo links.
-- Conditional action buttons: only displays links/buttons when valid URLs or attachments exist.
-
-### 4. Production Security Hardening
-- Passwords hashed with `bcryptjs` (12 salt rounds).
-- Cryptographic JWT authorization (`verifyAdmin`) on all mutating endpoints (`/api/resume`, `/api/categories`, `/api/projects`, `/api/upload`).
-- Rate limiting on `/api/auth/login` to prevent brute-force attacks.
-- Public visitor queries are strictly read-only.
-- `.env`, SQLite databases, and user uploads are strictly excluded in `.gitignore`.
+- **Dynamic Resume Management**: Upload, view (`/api/resume/view`), and download (`/api/resume/download`) PDFs with one-click admin replacement.
+- **Dynamic Categories**: Relational many-to-many categories (`project_categories`) with instant client-side filtering.
+- **Multi-Discipline Work**: Support for software projects, technical writing, dashboards, and research attachments.
+- **Production Hardened**: bcrypt salted hashing, rate limiting, secure cookies, helmet security headers, and zero client-exposed secrets.
